@@ -1,0 +1,90 @@
+<scene version="3.0.0">
+	<default name="spp" value="128" />
+	<default name="res" value="256" />
+
+	<integrator type='path'>
+		<integer name="max_depth" value="3" />
+	</integrator>
+
+	<sensor name="sensor" type="orthographic">
+		<transform name="to_world">
+			<scale value="2" />
+			<lookat origin="0, 1, 0" target="0, 0, 0" up="0, 0, 1" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$res" />
+			<integer name="height" value="$res" />
+			<rfilter type="box" />
+			<string name="pixel_format" value="rgb" />
+			<string name="component_format" value="float32" />
+			<boolean name="sample_border" value="True" />
+		</film>
+	</sensor>
+
+	<!-- BSDFs -->
+
+	<bsdf type="diffuse" id="black">
+		<rgb name="reflectance" value="0.1" />
+	</bsdf>
+
+	<bsdf type="diffuse" id="white">
+		<rgb name="reflectance" value="1" />
+	</bsdf>
+
+	<!-- Light -->
+	<emitter type="constant" id="env">
+		<rgb name="radiance" value="100" />
+	</emitter>
+
+	<emitter type="point" id="guard">
+		<rgb name="intensity" value="100" />
+		<point name="position" value="-0.5,0,0" />
+	</emitter>
+
+	<!-- Shapes -->
+
+	<shape type="rectangle" id="wall1">
+		<transform name="to_world">
+			<lookat origin="2, 0, 0" target="0, 0, 0" up="0, 1, 0" />
+		</transform>
+		<ref id="black" />
+	</shape>
+	<shape type="rectangle" id="wall2">
+		<transform name="to_world">
+			<lookat origin="-2, 0, 0" target="0, 0, 0" up="0, 1, 0" />
+		</transform>
+		<ref id="black" />
+	</shape>
+	<shape type="rectangle" id="wall3">
+		<transform name="to_world">
+			<scale x="2" />
+			<lookat origin="0, 0, 1" target="0, 0, 0" up="0, 1, 0" />
+		</transform>
+		<ref id="black" />
+	</shape>
+	<shape type="rectangle" id="wall4">
+		<transform name="to_world">
+			<scale x="2" />
+			<lookat origin="0, 0, -1" target="0, 0, 0" up="0, 1, 0" />
+		</transform>
+		<ref id="black" />
+	</shape>
+
+	<shape type="rectangle" id="obstruction">
+		<transform name="to_world">
+			<lookat origin="0, 0, 1" target="1, 0, 1" up="0, 1, 0" />
+		</transform>
+		<ref id="black" />
+	</shape>
+
+	<shape type="rectangle" id="floor">
+		<transform name="to_world">
+			<lookat origin="0, -0.5, 0" target="0, 0, 0" up="0, 0, 1" />
+			<scale x="2" />
+		</transform>
+		<ref id="white" />
+	</shape>
+</scene>
