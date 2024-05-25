@@ -25,7 +25,9 @@
 	</sensor>
 
 	<!-- BSDFs -->
-
+	<bsdf type="diffuse" id="veryblack">
+		<rgb name="reflectance" value="0" />
+	</bsdf>
 	<bsdf type="diffuse" id="black">
 		<rgb name="reflectance" value="0.1" />
 	</bsdf>
@@ -86,5 +88,13 @@
 			<scale x="2" />
 		</transform>
 		<ref id="white" />
+	</shape>
+
+	<shape type="rectangle" id="underfloor">
+		<transform name="to_world">
+			<lookat origin="0, -1, 0" target="0, 0, 0" up="0, 0, 1" />
+			<scale value="2" />
+		</transform>
+		<ref id="veryblack" />
 	</shape>
 </scene>

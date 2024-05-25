@@ -20,7 +20,7 @@ lr = 1e-1
 epochs = 100
 folder = "test"
 if os.path.isfile(folder):
-		raise f"File with name {folder} already exists"
+	raise f"File with name {folder} already exists"
 elif not os.path.isdir(folder):
 	os.mkdir(folder)
 
@@ -35,7 +35,6 @@ opt = mi.ad.Adam(lr=lr, uniform=True)
 opt['guard.position'] = params['guard.position']
 
 for it in range(epochs):
-	loss = mi.Float(0.0)
 	params.update(opt)
 
 	img = dr.clip(mi.render(scene, params, seed=it),0,1)
@@ -52,3 +51,5 @@ for it in range(epochs):
 	opt.step()
 
 	print(f"Iteration {1+it:03d}: Loss = {loss[0]:6f}: Position = {np.round(params['guard.position'], 2)}", flush=True)
+	if loss[0] < 1e-4:
+		break
