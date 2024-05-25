@@ -6,10 +6,11 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 
 # Polygon and guards setup
 th = 0.75 # tooth height
-polygonFrom = torch.tensor([[0,0], [0,1], [4,1], [4,0], [3,th], [2,0], [1,th]])
+n_teeth = 5
+polygonFrom = torch.tensor([*[[x, 0 if x % 2 == 0 else th] for x in range(n_teeth*2+1)], [n_teeth*2,1], [0,1]])
 polygonTo = torch.roll(polygonFrom, -1, 0)
 
-guards = torch.tensor([[[0.25,0.25]], [[0.25,0.25]]], requires_grad=True)
+guards = torch.tensor([[[0.25,0.25]], [[4,0.25]]], requires_grad=True)
 guard_states = [] # for animation
 
 optimizer = torch.optim.AdamW([guards], lr=1e-2)
@@ -17,9 +18,10 @@ optimizer = torch.optim.AdamW([guards], lr=1e-2)
 for _ in tqdm(range(1000)):
 	optimizer.zero_grad()
 
-	visibility = (guards[:,:,0]-polygonFrom[:,0])*(polygonTo[:,1]-polygonFrom[:,1]) - \
-				 (guards[:,:,1]-polygonFrom[:,1])*(polygonTo[:,0]-polygonFrom[:,0])
-	visibility = torch.relu(-visibility)
+	p1 = polygonFrom-guards
+	p2 = polygonTo-guards
+	crossp = p1[:,:,0]*p2[:,:,1] - p1[:,:,1]*p2[:,:,0]
+	visibility = torch.relu(-crossp)
 	loss = torch.sum(torch.cumprod(visibility, dim=0) + 0.5*visibility)
 
 	loss.backward()
