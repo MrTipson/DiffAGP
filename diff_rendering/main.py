@@ -15,7 +15,7 @@ def plot_output(render, filename):
 	plt.savefig(filename)
 	plt.close()
 
-res = 256
+res = 128
 lr = 10e-1
 epochs = 100
 folder = "test"
@@ -26,7 +26,7 @@ elif not os.path.isdir(folder):
 
 from tooth_scene import create_scene
 guardcount = 1
-scene_dict = create_scene()
+scene_dict = create_scene(spp=32, res=res)
 scene = mi.load_dict(scene_dict)
 params = mi.traverse(scene)
 
@@ -37,23 +37,27 @@ params["env.radiance.value"] = 0
 opt = mi.ad.Adam(lr=lr, uniform=True)
 opt['guard0.position'] = params['guard0.position']
 
+light_intensity = 15
 minloss, miniter = dr.inf, None
 for it in range(epochs):
 	params.update(opt)
 
+	local_loss = []
 	for i in range(guardcount):
 		params[f"guard{i}.intensity.value"] = 0
 	for i in range(guardcount):
-		params[f"guard{i}.intensity.value"] = 10 
-		if i == 0:
-			global_visibility = 1 - dr.clip(mi.render(scene, params, seed=it),0,1)
-		else:
-			global_visibility *= 1 - dr.clip(mi.render(scene, params, seed=it),0,1)
+		params[f"guard{i}.intensity.value"] = light_intensity 
+		local_loss.append(1 - dr.clip(mi.render(scene, params, seed=it),0,1))
+		with dr.suspend_grad():
+			if i == 0:
+				global_loss = local_loss[-1]*1
+			else:
+				global_loss *= local_loss[-1]
 		params[f"guard{i}.intensity.value"] = 0
 	for i in range(guardcount):
-		params[f"guard{i}.intensity.value"] = 10
+		params[f"guard{i}.intensity.value"] = light_intensity
 	
-	img = 1 - global_visibility
+	img = 1 - global_loss
 
 	plot_output(img, f"{folder}/render.png")
 	if it % 10 == 0:
@@ -61,21 +65,22 @@ for it in range(epochs):
 
 	# L2 Loss
 	#loss = dr.sqr(gt - img)
-	loss = global_visibility * gt
-	plot_output(loss, f"{folder}/loss.png")
-	loss = dr.mean(loss)
-
+	loss = 0
+	plot_output(global_loss*gt, f"{folder}/loss.png")
+	for i in range(guardcount):
+		loss += dr.mean(local_loss[i]*global_loss*gt)
+	loss /= guardcount
 	
 	dr.backward(loss)
 	opt.step()
 	for i in range(guardcount):
 		opt[f"guard{i}.position"][1] = params[f"guard{i}.position"][1]
 
-	if loss[0]/minloss < 0.9:
+	if loss[0]/minloss < 0.95:
 		minloss = loss[0]
 		miniter = it
 
-	if it - miniter > 5:
+	if it - miniter > 10:
 		minloss = loss[0]
 		miniter = it
 		print(*np.array(params[f'guard{guardcount-1}.position']).flatten())
@@ -94,6 +99,6 @@ for it in range(epochs):
 			opt[f'guard{i}.position'] = params[f'guard{i}.position']
 
 	print(f"Iteration {1+it:03d}: Loss = {loss[0]:6f}")
-	print(f"Positions = {[np.round(params[f'guard{i}.position'], 2) for i in range(guardcount)]}", flush=True)
+	print(f"Positions = {[list(np.round(params[f'guard{i}.position'], 2).flatten()) for i in range(guardcount)]}", flush=True)
 	if loss[0] < 1e-4:
 		break
