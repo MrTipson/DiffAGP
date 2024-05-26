@@ -7,7 +7,7 @@ def create_scene(spp=128, res=256):
 		'type': 'scene',
 		'sensor': {
 			'type': 'orthographic',
-			'to_world': T.scale((5,)*3).look_at(origin=[0,1,0], target=[0,0,0], up=[0,0,1]),
+			'to_world': T.scale((5,)*3).look_at(origin=[0,-1,0], target=[0,0,0], up=[0,0,1]),
 			'sampler': {
 				'type': 'independent',
 				'sample_count': spp
@@ -26,7 +26,7 @@ def create_scene(spp=128, res=256):
 		},
 		'integrator': {
 			'type': 'path',
-			'max_depth': 3
+			'max_depth': 4
 		},
 		'veryblack': {
 			'type': 'diffuse',
@@ -42,12 +42,12 @@ def create_scene(spp=128, res=256):
 		},
 		'env': {
 			'type': 'constant',
-			'radiance': { 'type': 'spectrum', 'value': 100 }
+			'radiance': { 'type': 'spectrum', 'value': 10 }
 		},
 		'floor': {
 			'type': 'obj',
 			'filename': 'floor.obj',
-			'bsdf': { 'type': 'ref', 'id': 'white'}
+			'bsdf': { 'type': 'ref', 'id': 'white'},
 		},
 		'walls': {
 			'type': 'obj',
@@ -57,6 +57,11 @@ def create_scene(spp=128, res=256):
 		'underfloor': {
 			'type': 'rectangle',
 			'bsdf': { 'type': 'ref', 'id': 'veryblack'},
-			'to_world': T.scale((5,)*3).look_at(origin=[0,-1,0], target=[0,0,0], up=[0,0,1])
+			'to_world': T.scale((10,)*3).look_at(origin=[0,1,0], target=[0,-1,0], up=[0,0,1])
+		},
+		'guard0': {
+			'type': 'point',
+			'intensity': {'type': 'spectrum', 'value': 0},
+			'position': (-0.5,-0.75,0)
 		}
 	}
