@@ -9,9 +9,9 @@ polygon .. list of points (x,y) in counter clockwise order
 guards  .. list of points (x,y)
 '''
 def optimize_AGP(polygon, guards):
-	polygonFrom = torch.tensor(polygon)
+	polygonFrom = torch.tensor(polygon, dtype=float)
 	polygonTo = torch.roll(polygonFrom, -1, 0)
-	guards = torch.tensor([[g] for g in guards], requires_grad=True)
+	guards = torch.tensor([[g] for g in guards], requires_grad=True, dtype=float)
 	guard_states = [] # for animation
 
 	optimizer = torch.optim.AdamW([guards], lr=1e-2)
@@ -31,11 +31,12 @@ def optimize_AGP(polygon, guards):
 		guard_states.append(guards.detach().squeeze(1).numpy().copy())
 
 	print("Saving animation...")
-	fig = plt.figure()
+	fig, ax = plt.subplots()
 	plt.plot(*zip(*polygonFrom.numpy(), polygonFrom[0]), c="black")
-	scplot = plt.scatter([],[])
+	scplot = ax.scatter([],[])
 
 	def animate(i):
+		ax.set_title(i)
 		scplot.set_offsets(guard_states[i])
 		return scplot,
 
@@ -44,5 +45,5 @@ def optimize_AGP(polygon, guards):
 
 # Polygon and guards setup
 if __name__ == "__main__":
-	from examples import load_sawteeth, load_z
-	optimize_AGP(*load_z())
+	from examples import load_sawteeth, load_z, load_e1, load_e2
+	optimize_AGP(*load_e2())
